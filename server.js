@@ -91,7 +91,7 @@ app.post('/send-email', async (req, res) => {
             service: 'gmail',
             auth: {
                 user: 'praveeshbkt1999@gmail.com', // your Gmail
-                pass: 'YOUR_APP_PASSWORD' // ⚠️ use App Password, not normal password
+                pass: 'lxpl oxey zrcv wgvh' // ⚠️ use App Password, not normal password
             }
         });
 
@@ -120,3 +120,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
