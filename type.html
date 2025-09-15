@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dicto – Typing Finger Guide</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    textarea {
+      width: 80%;
+      height: 100px;
+      font-size: 1.2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    #fingerDisplay {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+      background-color: #e0f7fa;
+      padding: 1rem;
+      border-radius: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dicto – Typing Finger Guide</h1>
+  <p>Start typing below. We'll show you which finger should press each key.</p>
+
+  <textarea id="typingBox" placeholder="Type here..."></textarea>
+
+  <div id="fingerDisplay">Finger: —</div>
+
+  <script>
+    const fingerMap = {
+      // Left hand
+      'q': 'Left Pinky', 'a': 'Left Pinky', 'z': 'Left Pinky',
+      'w': 'Left Ring',  's': 'Left Ring',  'x': 'Left Ring',
+      'e': 'Left Middle','d': 'Left Middle','c': 'Left Middle',
+      'r': 'Left Index', 'f': 'Left Index', 'v': 'Left Index',
+      't': 'Left Index', 'g': 'Left Index', 'b': 'Left Index',
+
+      // Right hand
+      'y': 'Right Index','h': 'Right Index','n': 'Right Index',
+      'u': 'Right Index','j': 'Right Index','m': 'Right Index',
+      'i': 'Right Middle','k': 'Right Middle',
+      'o': 'Right Ring',  'l': 'Right Ring',
+      'p': 'Right Pinky', ';': 'Right Pinky', '/': 'Right Pinky',
+
+      // Thumbs
+      ' ': 'Thumbs (Spacebar)'
+    };
+
+    const display = document.getElementById('fingerDisplay');
+    const typingBox = document.getElementById('typingBox');
+
+    typingBox.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      const finger = fingerMap[key] || 'Unknown / Not Mapped';
+      display.textContent = `Finger: ${finger}`;
+    });
+  </script>
+
+</body>
+</html>
