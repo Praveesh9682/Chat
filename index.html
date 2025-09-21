@@ -119,6 +119,25 @@
       background-color: #555;
     }
 
+    .video-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 1rem;
+    }
+
+    video {
+      width: 45%;
+      border: 2px solid #333;
+      border-radius: 10px;
+    }
+
+    .controls {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
     footer {
       background-color: #333;
       color: white;
@@ -146,6 +165,17 @@
       <input id="input" autocomplete="off" placeholder="Type a message..." required />
       <button type="submit">Send</button>
     </form>
+
+    <button id="startVideo">Start Video Call</button>
+    <div class="video-container">
+      <video id="localVideo" autoplay muted></video>
+      <video id="remoteVideo" autoplay></video>
+    </div>
+    <div class="controls" style="display:none;" id="callControls">
+      <button id="muteBtn">Mute</button>
+      <button id="cameraBtn">Camera Off</button>
+      <button id="endCallBtn">End Call</button>
+    </div>
   </div>
 
   <footer>
@@ -162,18 +192,30 @@
     const usernameInput = document.getElementById('username');
     const userCountDisplay = document.getElementById('userCount');
 
+    const startVideoBtn = document.getElementById('startVideo');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+
+    const muteBtn = document.getElementById('muteBtn');
+    const cameraBtn = document.getElementById('cameraBtn');
+    const endCallBtn = document.getElementById('endCallBtn');
+    const callControls = document.getElementById('callControls');
+
     let currentRoom = '';
     let username = '';
+    let localStream;
+    let peerConnection;
+    let audioEnabled = true;
+    let videoEnabled = true;
+
+    const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
     roomInput.addEventListener('change', () => {
       currentRoom = roomInput.value.trim();
       username = usernameInput.value.trim();
-
-      if (currentRoom !== '' && username !== '') {
+      if (currentRoom && username) {
         socket.emit('joinRoom', { room: currentRoom, username });
         messages.innerHTML = '';
-      } else {
-        alert('Please enter both username and room name.');
       }
     });
 
@@ -181,16 +223,9 @@
       e.preventDefault();
       const message = input.value.trim();
       username = usernameInput.value.trim();
-
-      if (message !== '' && currentRoom !== '' && username !== '') {
-        socket.emit('chatMessage', {
-          room: currentRoom,
-          username,
-          message
-        });
+      if (message && currentRoom && username) {
+        socket.emit('chatMessage', { room: currentRoom, username, message });
         input.value = '';
-      } else {
-        alert('Please enter your name and room before sending a message.');
       }
     });
 
@@ -205,7 +240,99 @@
     socket.on('roomUserCount', (count) => {
       userCountDisplay.textContent = `Users in this room: ${count}`;
     });
+
+    // ================= Video Call Logic =================
+    startVideoBtn.addEventListener('click', async () => {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+
+      peerConnection = new RTCPeerConnection(config);
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      peerConnection.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('ice-candidate', { candidate: event.candidate, room: currentRoom });
+        }
+      };
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      socket.emit('offer', { offer, room: currentRoom });
+
+      // Show controls
+      callControls.style.display = "flex";
+    });
+
+    socket.on('offer', async (data) => {
+      if (!peerConnection) {
+        peerConnection = new RTCPeerConnection(config);
+
+        peerConnection.ontrack = (event) => {
+          remoteVideo.srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit('ice-candidate', { candidate: event.candidate, room: currentRoom });
+          }
+        };
+
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+      }
+
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      socket.emit('answer', { answer, room: currentRoom });
+
+      // Show controls
+      callControls.style.display = "flex";
+    });
+
+    socket.on('answer', async (data) => {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    });
+
+    socket.on('ice-candidate', async (data) => {
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } catch (e) {
+        console.error("Error adding ICE candidate", e);
+      }
+    });
+
+    // ================== Call Controls ==================
+    muteBtn.addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      localStream.getAudioTracks().forEach(track => track.enabled = audioEnabled);
+      muteBtn.textContent = audioEnabled ? "Mute" : "Unmute";
+    });
+
+    cameraBtn.addEventListener('click', () => {
+      videoEnabled = !videoEnabled;
+      localStream.getVideoTracks().forEach(track => track.enabled = videoEnabled);
+      cameraBtn.textContent = videoEnabled ? "Camera Off" : "Camera On";
+    });
+
+    endCallBtn.addEventListener('click', () => {
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      localVideo.srcObject = null;
+      remoteVideo.srcObject = null;
+      callControls.style.display = "none";
+    });
   </script>
 </body>
 </html>
-
