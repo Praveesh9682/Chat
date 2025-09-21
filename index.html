@@ -13,7 +13,6 @@
       flex-direction: column;
       min-height: 100vh;
     }
-
     nav {
       background-color: #333;
       color: white;
@@ -22,17 +21,8 @@
       justify-content: space-around;
       align-items: center;
     }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    nav a:hover {
-      text-decoration: underline;
-    }
-
+    nav a { color: white; text-decoration: none; font-weight: bold; }
+    nav a:hover { text-decoration: underline; }
     .chat-container {
       flex: 1;
       padding: 2rem;
@@ -42,12 +32,6 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       border-radius: 8px;
     }
-
-    .chat-container h2 {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
     input[type="text"] {
       width: 100%;
       padding: 0.6rem;
@@ -55,96 +39,26 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-
-    #userCount {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-
+    #userCount { text-align: center; font-weight: bold; margin-bottom: 1rem; }
     #messages {
-      list-style: none;
-      padding: 0;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 1rem;
-      display: flex;
-      flex-direction: column;
+      list-style: none; padding: 0;
+      max-height: 300px; overflow-y: auto;
+      margin-bottom: 1rem; display: flex; flex-direction: column;
     }
-
     #messages li {
-      margin: 0.5rem 0;
-      padding: 0.6rem;
-      border-radius: 10px;
-      max-width: 70%;
-      word-wrap: break-word;
+      margin: 0.5rem 0; padding: 0.6rem;
+      border-radius: 10px; max-width: 70%; word-wrap: break-word;
     }
-
-    .my-message {
-      background-color: #dcf8c6;
-      align-self: flex-end;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .other-message {
-      background-color: #eee;
-      align-self: flex-start;
-      margin-right: auto;
-      text-align: left;
-    }
-
-    #form {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    #input {
-      flex: 1;
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    button {
-      padding: 0.6rem 1rem;
-      background-color: #333;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #555;
-    }
-
-    .video-container {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 1rem;
-    }
-
-    video {
-      width: 45%;
-      border: 2px solid #333;
-      border-radius: 10px;
-    }
-
-    .controls {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    footer {
-      background-color: #333;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
+    .my-message { background-color: #dcf8c6; align-self: flex-end; text-align: right; }
+    .other-message { background-color: #eee; align-self: flex-start; text-align: left; }
+    #form { display: flex; gap: 0.5rem; }
+    #input { flex: 1; padding: 0.6rem; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 0.6rem 1rem; background-color: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #555; }
+    .video-container { display: flex; justify-content: space-around; margin-top: 1rem; }
+    video { width: 45%; border: 2px solid #333; border-radius: 10px; }
+    .controls { margin-top: 1rem; display: flex; justify-content: center; gap: 1rem; }
+    footer { background-color: #333; color: white; text-align: center; padding: 1rem; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -159,17 +73,20 @@
     <h2>Chat App</h2>
     <input type="text" id="username" placeholder="Enter Your Name" required />
     <input type="text" id="room" placeholder="Enter Room Name" required />
+    <button id="joinBtn">Join Room</button>
+
     <p id="userCount">Users in this room: 0</p>
     <ul id="messages"></ul>
-    <form id="form">
+
+    <form id="form" style="display:none;">
       <input id="input" autocomplete="off" placeholder="Type a message..." required />
       <button type="submit">Send</button>
     </form>
 
-    <button id="startVideo">Start Video Call</button>
+    <button id="startVideo" style="display:none;">Start Video Call</button>
     <div class="video-container">
-      <video id="localVideo" autoplay muted></video>
-      <video id="remoteVideo" autoplay></video>
+      <video id="localVideo" autoplay muted playsinline></video>
+      <video id="remoteVideo" autoplay playsinline></video>
     </div>
     <div class="controls" style="display:none;" id="callControls">
       <button id="muteBtn">Mute</button>
@@ -178,9 +95,7 @@
     </div>
   </div>
 
-  <footer>
-    © chattingapp.com 2025. All rights reserved.
-  </footer>
+  <footer>© chattingapp.com 2025. All rights reserved.</footer>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -191,6 +106,7 @@
     const roomInput = document.getElementById('room');
     const usernameInput = document.getElementById('username');
     const userCountDisplay = document.getElementById('userCount');
+    const joinBtn = document.getElementById('joinBtn');
 
     const startVideoBtn = document.getElementById('startVideo');
     const localVideo = document.getElementById('localVideo');
@@ -210,19 +126,22 @@
 
     const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-    roomInput.addEventListener('change', () => {
+    // ================= Join Room =================
+    joinBtn.addEventListener('click', () => {
       currentRoom = roomInput.value.trim();
       username = usernameInput.value.trim();
       if (currentRoom && username) {
         socket.emit('joinRoom', { room: currentRoom, username });
         messages.innerHTML = '';
+        form.style.display = "flex";
+        startVideoBtn.style.display = "block";
       }
     });
 
+    // ================= Chat =================
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const message = input.value.trim();
-      username = usernameInput.value.trim();
       if (message && currentRoom && username) {
         socket.emit('chatMessage', { room: currentRoom, username, message });
         input.value = '';
@@ -242,12 +161,8 @@
     });
 
     // ================= Video Call Logic =================
-    startVideoBtn.addEventListener('click', async () => {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      localVideo.srcObject = localStream;
-
+    async function createPeerConnection() {
       peerConnection = new RTCPeerConnection(config);
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
       peerConnection.ontrack = (event) => {
         remoteVideo.srcObject = event.streams[0];
@@ -259,30 +174,29 @@
         }
       };
 
+      return peerConnection;
+    }
+
+    startVideoBtn.addEventListener('click', async () => {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+
+      peerConnection = await createPeerConnection();
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
       socket.emit('offer', { offer, room: currentRoom });
 
-      // Show controls
       callControls.style.display = "flex";
     });
 
     socket.on('offer', async (data) => {
       if (!peerConnection) {
-        peerConnection = new RTCPeerConnection(config);
-
-        peerConnection.ontrack = (event) => {
-          remoteVideo.srcObject = event.streams[0];
-        };
-
-        peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            socket.emit('ice-candidate', { candidate: event.candidate, room: currentRoom });
-          }
-        };
-
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localVideo.srcObject = localStream;
+
+        peerConnection = await createPeerConnection();
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
       }
 
@@ -291,7 +205,6 @@
       await peerConnection.setLocalDescription(answer);
       socket.emit('answer', { answer, room: currentRoom });
 
-      // Show controls
       callControls.style.display = "flex";
     });
 
